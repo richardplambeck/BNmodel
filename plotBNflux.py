@@ -45,12 +45,11 @@ def epowlaw( beta ):
 
 #print epowlaw(1.26) 
 
-def plotFluxes() :
+def plotFluxes( datafile, modelfile ) :
 
   # read data from csv file (downloaded from Google Drive)
     # infile = "BN - IntegratedFluxes.csv"
-    infile = "BN - FluxTable.csv"
-    data = numpy.genfromtxt( infile, dtype=None, delimiter=",", names=True)
+    data = numpy.genfromtxt( datafile, dtype=None, delimiter=",", names=True)
 
   # open the figure
     pp = PdfPages("BNfluxes.pdf")
@@ -63,8 +62,8 @@ def plotFluxes() :
     # ax.set_ylim( 10., 2000. )
 
   # plot models first so points will lie above them
-    infile = "BNmodel_1.radialModel"
-    fGHz,contFlux,lineFlux = numpy.loadtxt( infile, usecols=(0,2,4), unpack=True)
+    #infile = "BNmodel_1.radialModel"
+    fGHz,contFlux,lineFlux = numpy.loadtxt( modelfile, usecols=(0,2,4), unpack=True)
     #ax.plot( fGHz, contFlux )
     #ax.plot( fGHz, lineFlux, "--" )
     fnew = numpy.arange(1,1000,100.)
@@ -95,11 +94,11 @@ def plotFluxes() :
     pp.close()
     pyplot.show()  
 
-plotFluxes()
     
 def getAlpha( f1, S1, f2, S2 ):
     alpha = math.log(S2/S1)/math.log(f2/f1)
     print f1, S1, f2, S2, alpha
 
+plotFluxes( "Users/plambeck/BN/FluxPlot/BN - FluxTable.csv", "Users/plambeck/BN/FluxPlot/BNmodel_1.radialModel" )
 #getAlpha( 85.85, 68.42, 97., 75.01 )
 #getAlpha( 87.34, 66.71, 99.36, 82.16 )
