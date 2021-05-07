@@ -11,8 +11,8 @@ import matplotlib.colors as colors
 from matplotlib.backends.backend_pdf import PdfPages
 
 # get rough spectral index of our new data
-def fitData( fnew ) :
-    infile = "BN - FluxTable.csv"
+def fitData( infile, fnew ) :
+    #infile = "BN - FluxTable.csv"
     data = numpy.genfromtxt( infile, dtype=None, delimiter=",", names=True)
     fGHz = []
     flux = []
@@ -67,7 +67,7 @@ def plotFluxes( datafile, modelfile ) :
     #ax.plot( fGHz, contFlux )
     #ax.plot( fGHz, lineFlux, "--" )
     fnew = numpy.arange(1,1000,100.)
-    ax.plot( fnew, fitData( fnew ), color="red" )
+    ax.plot( fnew, fitData( datafile, fnew ), color="red" )
     
 
   # plot points one at a time because errorbar doesn't allow array of symbols or colors
@@ -99,6 +99,6 @@ def getAlpha( f1, S1, f2, S2 ):
     alpha = math.log(S2/S1)/math.log(f2/f1)
     print f1, S1, f2, S2, alpha
 
-plotFluxes( "Users/plambeck/BN/FluxPlot/BN - FluxTable.csv", "Users/plambeck/BN/FluxPlot/BNmodel_1.radialModel" )
+plotFluxes( "/Users/plambeck/BN/FluxPlot/BN_FluxTable.csv", "/Users/plambeck/BN/FluxPlot/BNmodel_1.radialModel" )
 #getAlpha( 85.85, 68.42, 97., 75.01 )
 #getAlpha( 87.34, 66.71, 99.36, 82.16 )
