@@ -129,6 +129,22 @@ def tauL( EM, fGHz, fwhm ) :
     dfkHz = 1.e11 * fwhm * fGHz / c 
     return (1.92e3 * pow(Te, -2.5) * EM / dfkHz )
 
+def vprofile( fwhm_gauss, fwhm_lorentz, dv ) :
+    A_gauss = math.sqrt(math.log(2)/math.pi) * 2./fwhm_gauss 
+    A_lorentz = fwhm_lorentz/(2.*math.pi) 
+    v = numpy.arange(-200.,200.+dv,dv)
+    phi_gauss = A_gauss * numpy.exp( -4.*math.log(2)*pow(v/fwhm_gauss,2)) 
+    phi_lorentz = A_lorentz / ( pow(v,2) + pow(fwhm_lorentz/2.,2) )
+    phi_voigt = dv*numpy.convolve( phi_gauss, phi_lorentz, 'same' )
+    fig = pyplot.figure()
+    print dv*numpy.sum(phi_gauss),dv*numpy.sum(phi_lorentz),dv*numpy.sum(phi_voigt)
+    pyplot.plot( v, phi_gauss )
+    pyplot.plot( v, phi_lorentz )
+    pyplot.plot( v, phi_voigt )
+    pyplot.show()
+    
+   
+   
 # --- find emission measure at projected distance x(cm) from the center --- #
 def em (xAU, alpha, r0AU, n0, rmaxAU) :
     dyAU = .1
@@ -430,17 +446,40 @@ def delnu1(n, Ne, Te) :
     delnu1_S = 8.e-10 * pow(n,5) * Ne * pow(Te,-0.1)
     return delnu1_BS,delnu1_W,delnu1_S
 
-'''
-for Ne in [ 1.e4, 1.e5, 1.e6, 1.e7, 1.e8] :
-  print " "
-  for nnn,fGHz in zip( [26,30,40,52],[353.,232.,99.,88.]) :
-    d1,d2,d3 = delnu1( nnn, Ne, 8000.) 
-    dv1 = d1/(fGHz*1.e9) * 3.e5
-    dv2 = d2/(fGHz*1.e9) * 3.e5
-    dv3 = d3/(fGHz*1.e9) * 3.e5
-    print "%.2e  %d  %6.2f  %6.2f  %6.2f" % (Ne,nnn,dv1,dv2,dv3)
-'''
-# ===== oct 2020 =====
+def printPressureBroadenedLinewidths():
+    for Ne in [ 1.e4, 1.e5, 1.e6, 1.e7, 1.e8] :
+      print " "
+      for nnn,fGHz in zip( [26,30,40,52],[353.,232.,99.,88.]) :
+        d1,d2,d3 = delnu1( nnn, Ne, 8000.) 
+        dv1 = d1/(fGHz*1.e9) * 3.e5
+        dv2 = d2/(fGHz*1.e9) * 3.e5
+        dv3 = d3/(fGHz*1.e9) * 3.e5
+        print "%.2e  %d  %6.2f  %6.2f  %6.2f" % (Ne,nnn,dv1,dv2,dv3)
+
+# compute line freq from level n+m to level n, Brocklehurst and Seaton 1972 eqn 3.3
+def BSfreq( n, m ):
+    me = 9.10938e-28
+    mp = 1.67262e-14
+    Ryd = 109737.31
+    # print Ryd/(1.+me/mp)
+    print Ryd/(1 + me/mp) * 29.98 * 2 * m/pow(n,3) * (1. - 1.5*m/n)
+    print Ryd/(1 + me/mp) * 29.98 * (1./pow(n,2) - 1./pow(n+m,2))
+    
+# -----------------------------------------------------------------------------------------------------------#
+# compute line opacity vs velocity for transition (n+m)->(n)
+#  n = lower level
+#  n+m = upper level (m=1 for alpha, m=2 for beta transitions)
+#  fwhm_thermal = thermal + turbulent velocity
+#  vel = array[0, v1, v2, ... vn] = velocity from line center
+#  returns array tauline
+# -----------------------------------------------------------------------------------------------------------#
+#def tauVsVel( Ne, Te, n, m, fwhm_thermal, varray ):
+#    fwhm = fwhm_thermal
+#    delnu1_W = 6.7e-9 * pow(n,4.6) * Ne * pow(Te,-0.1)    # Walmsley approx for line broadening in Hz
+#    dv = delnu1_W/(fGHz*1.e9) * 3.e5
+#    if dv > 0.1 * fwhm_thermal :
+#      fwhm = math.sqrt(pow(fwhm_thermal,2) + pow(dv,2))
+#    tauline = 
 
 # -----------------------------------------------------------------------------------------------------------#
 # model dictionary provides the parameters to compute the emission measure projected on the (x,y) plane
@@ -564,6 +603,7 @@ modelH = { "alpha" :  -2.6,
            "thetai_deg" : 30.,
          }  
 
+
 # -----------------------------------------------------------------------------------------------------------#
 # EMcalc ingests a 'model' dictionary, computes the emission measure across the source, writes model
 #   and emission measure image to a pickle file (which can later be used to compute a continuum image)
@@ -603,6 +643,9 @@ def EMcalc( model, pklfile ):
               ne = model[ "ne_core" ]  * pow(r/model[ "r_core_AU"], model["alpha"] )
             EMimg[i,j] = EMimg[i,j] + ne * ne * model["incr_AU"] * 1.496e13 / 3.0856e18
 		# add emission measure increment for this cell, in cm-6 * pc
+            #for line in recombLines :
+            #  vpb = FWHMtot( line["n"], line["m"], 
+
 
   # append EM image file to model dictionary and pickle it
     model["EMimg"] =  EMimg   
@@ -974,7 +1017,7 @@ fGHzArray = numpy.power(10., numpy.arange(0.2,3.8,0.1) )
 # computeFlux( "modelE.pkl", fGHzArray, outFile="Flux_modelE.dat"  )
 
 #EMcalc( modelH, "modelH.pkl" )
-plotTb( "modelH.pkl", 43., 0. )
+#plotTb( "modelH.pkl", 43., 0. )
 #plotTb( "modelC.pkl", 43., 0., Old=True )
 
 '''
